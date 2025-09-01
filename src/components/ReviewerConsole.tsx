@@ -581,7 +581,7 @@ function Info({ label, value }: { label: string; value: string }) { return (<div
 function RunsMiniList({ onSelect }: { onSelect: () => void }) {
   return (<div className="space-y-2">{MOCK_RUNS.slice(0, 5).map((r) => (<div key={r.runId} className="flex items-center justify-between p-2 rounded-xl border border-slate-200"><div className="flex items-center gap-3"><StatusBadge status={r.status} /><div className="text-sm">{r.deviceId}</div></div><div className="flex items-center gap-3"><CiBadge ci={r.ciAvg} /><button className="px-3 py-1.5 rounded-lg bg-slate-100 text-sm" onClick={onSelect}>Open</button></div></div>))}</div>);
 }
-function Check({ label, value, ok = False }: { label: string; value: string; ok?: boolean }) {
+function Check({ label, value, ok = false }: { label: string; value: string; ok?: boolean }) {
   return (<div className={`p-3 rounded-xl border ${ok ? "border-emerald-200 bg-emerald-50" : "border-slate-200 bg-white"}`}><div className="text-xs text-slate-500">{label}</div><div className="text-sm font-medium mt-1">{value}</div></div>);
 }
 
