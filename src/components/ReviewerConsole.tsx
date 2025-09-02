@@ -1,6 +1,10 @@
 import React, { useMemo, useState, useEffect } from "react";
 
-export default function ReviewerConsole() {
+interface ReviewerConsoleProps {
+  onBackToLanding?: () => void;
+}
+
+export default function ReviewerConsole({ onBackToLanding }: ReviewerConsoleProps = {}) {
   const [activeTab, setActiveTab] = useState<
     "dashboard" | "runs" | "reviews" | "devices" | "tests" | "analytics" | "settings"
   >("dashboard");
@@ -8,6 +12,7 @@ export default function ReviewerConsole() {
   const [drawerTab, setDrawerTab] = useState<DrawerTab>("summary");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const filteredRuns = useMemo(() => {
     return MOCK_RUNS.filter(
@@ -21,10 +26,10 @@ export default function ReviewerConsole() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
-      <TopNav />
+      <TopNav onBackToLanding={onBackToLanding} sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
       <div className="flex">
-        <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
-        <main className="flex-1 p-6 space-y-6">
+        <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+        <main className="flex-1 p-3 sm:p-6 space-y-4 sm:space-y-6 transition-all duration-300">
           {activeTab === "dashboard" && <Dashboard setActiveTab={setActiveTab} />}
           {activeTab === "runs" && (
             <RunsTable
@@ -71,19 +76,61 @@ export default function ReviewerConsole() {
   );
 }
 
-function TopNav() {
+function TopNav({ onBackToLanding, sidebarOpen, setSidebarOpen }: { onBackToLanding?: () => void; sidebarOpen: boolean; setSidebarOpen: (open: boolean) => void }) {
   return (
     <header className="sticky top-0 z-30 bg-white/80 backdrop-blur border-b border-slate-200">
-      <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 h-16 flex items-center justify-between">
         <div className="flex items-center gap-3">
+          {/* Mobile menu button */}
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="lg:hidden p-2 -m-2 rounded-xl hover:bg-slate-100"
+          >
+            <svg className="h-5 w-5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={sidebarOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} />
+            </svg>
+          </button>
+          
+          {/* Back button for mobile */}
+          {onBackToLanding && (
+            <button
+              onClick={onBackToLanding}
+              className="lg:hidden p-2 -m-2 rounded-xl hover:bg-slate-100"
+            >
+              <svg className="h-5 w-5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+            </button>
+          )}
+          
           <div className="h-8 w-8 rounded-xl bg-indigo-600" />
-          <div className="font-semibold tracking-tight">TWAIN Cert Platform</div>
-          <span className="text-slate-400">•</span>
-          <div className="text-sm text-slate-500">Reviewer Console</div>
+          <div className="font-semibold tracking-tight text-sm sm:text-base">TWAIN Cert Platform</div>
+          <span className="text-slate-400 hidden sm:inline">•</span>
+          <div className="text-sm text-slate-500 hidden sm:block">Reviewer Console</div>
         </div>
+        
         <div className="flex items-center gap-2">
-          <button className="px-3 py-2 text-sm rounded-xl bg-slate-100 hover:bg-slate-200">Start Run</button>
-          <button className="px-3 py-2 text-sm rounded-xl bg-indigo-600 text-white hover:bg-indigo-700">New Device</button>
+          {/* Desktop back button */}
+          {onBackToLanding && (
+            <button
+              onClick={onBackToLanding}
+              className="hidden lg:flex px-3 py-2 text-sm rounded-xl bg-slate-100 hover:bg-slate-200 items-center gap-2"
+            >
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+              Back to Home
+            </button>
+          )}
+          
+          <button className="px-2 sm:px-3 py-2 text-xs sm:text-sm rounded-xl bg-slate-100 hover:bg-slate-200">
+            <span className="hidden sm:inline">Start Run</span>
+            <span className="sm:hidden">Start</span>
+          </button>
+          <button className="px-2 sm:px-3 py-2 text-xs sm:text-sm rounded-xl bg-indigo-600 text-white hover:bg-indigo-700">
+            <span className="hidden sm:inline">New Device</span>
+            <span className="sm:hidden">New</span>
+          </button>
           <div className="h-8 w-8 rounded-full bg-slate-200" />
         </div>
       </div>
@@ -91,7 +138,7 @@ function TopNav() {
   );
 }
 
-function Sidebar({ activeTab, setActiveTab }: { activeTab: string; setActiveTab: (t: any) => void }) {
+function Sidebar({ activeTab, setActiveTab, sidebarOpen, setSidebarOpen }: { activeTab: string; setActiveTab: (t: any) => void; sidebarOpen: boolean; setSidebarOpen: (open: boolean) => void }) {
   const items: { id: any; label: string; icon: string }[] = [
     { id: "dashboard", label: "Dashboard", icon: "🏠" },
     { id: "runs", label: "Runs", icon: "📄" },
@@ -101,29 +148,52 @@ function Sidebar({ activeTab, setActiveTab }: { activeTab: string; setActiveTab:
     { id: "analytics", label: "Analytics", icon: "📈" },
     { id: "settings", label: "Settings", icon: "⚙️" }
   ];
+
+  const handleTabClick = (tabId: any) => {
+    setActiveTab(tabId);
+    // Close mobile menu when item is selected
+    setSidebarOpen(false);
+  };
+
   return (
-    <aside className="w-64 bg-white border-r border-slate-200 min-h-[calc(100vh-4rem)]">
-      <nav className="p-3 space-y-1">
-        {items.map((it) => (
-          <button
-            key={it.id}
-            onClick={() => setActiveTab(it.id)}
-            className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left hover:bg-slate-50 ${activeTab === it.id ? "bg-slate-100" : ""}`}
-          >
-            <span className="text-base">{it.icon}</span>
-            <span className="text-sm">{it.label}</span>
-          </button>
-        ))}
-      </nav>
-      <div className="px-3">
-        <div className="p-3 rounded-xl bg-indigo-50 border border-indigo-100">
-          <div className="text-xs font-semibold text-indigo-700">HITL Policies</div>
-          <div className="text-xs text-indigo-700/80 mt-1">
-            CI ≥ 0.85 auto-pass · 0.65–0.85 review · <span className="font-medium">8%</span> random sampling
+    <>
+      {/* Mobile backdrop */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-40 lg:hidden bg-slate-900/50"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside className={`
+        fixed lg:static inset-y-0 left-0 z-50 lg:z-0
+        w-64 bg-white border-r border-slate-200 min-h-[calc(100vh-4rem)]
+        transform transition-transform duration-300 ease-in-out lg:transform-none
+        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+      `}>
+        <nav className="p-3 space-y-1">
+          {items.map((it) => (
+            <button
+              key={it.id}
+              onClick={() => handleTabClick(it.id)}
+              className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left hover:bg-slate-50 transition-colors ${activeTab === it.id ? "bg-slate-100" : ""}`}
+            >
+              <span className="text-base">{it.icon}</span>
+              <span className="text-sm">{it.label}</span>
+            </button>
+          ))}
+        </nav>
+        <div className="px-3 mt-6">
+          <div className="p-3 rounded-xl bg-indigo-50 border border-indigo-100">
+            <div className="text-xs font-semibold text-indigo-700">HITL Policies</div>
+            <div className="text-xs text-indigo-700/80 mt-1 leading-relaxed">
+              CI ≥ 0.85 auto-pass · 0.65–0.85 review · <span className="font-medium">8%</span> random sampling
+            </div>
           </div>
         </div>
-      </div>
-    </aside>
+      </aside>
+    </>
   );
 }
 
@@ -163,11 +233,11 @@ function RunsTable({ runs, search, statusFilter, onSearch, onStatusFilter, onSel
   { runs: Run[]; search: string; statusFilter: string; onSearch: (v: string) => void; onStatusFilter: (v: string) => void; onSelectRun: (r: Run) => void; }) {
   return (
     <Card>
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <h3 className="font-semibold">Runs</h3>
-        <div className="flex items-center gap-2">
-          <input value={search} onChange={(e) => onSearch(e.target.value)} placeholder="Search runId or deviceId" className="px-3 py-2 rounded-xl border border-slate-200 text-sm w-64" />
-          <select value={statusFilter} onChange={(e) => onStatusFilter(e.target.value)} className="px-3 py-2 rounded-xl border border-slate-200 text-sm">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+          <input value={search} onChange={(e) => onSearch(e.target.value)} placeholder="Search runId or deviceId" className="px-3 py-2 rounded-xl border border-slate-200 text-sm w-full sm:w-64" />
+          <select value={statusFilter} onChange={(e) => onStatusFilter(e.target.value)} className="px-3 py-2 rounded-xl border border-slate-200 text-sm w-full sm:w-auto">
             <option value="all">All statuses</option>
             <option value="PASSED">Passed</option>
             <option value="WARN">Warn</option>
@@ -175,7 +245,30 @@ function RunsTable({ runs, search, statusFilter, onSearch, onStatusFilter, onSel
           </select>
         </div>
       </div>
-      <div className="mt-4 overflow-auto rounded-xl border border-slate-100">
+      
+      {/* Mobile Card Layout */}
+      <div className="mt-4 space-y-3 sm:hidden">
+        {runs.map((r) => (
+          <div key={r.runId} className="p-3 rounded-xl border border-slate-200 bg-white">
+            <div className="flex items-center justify-between mb-2">
+              <div className="font-mono text-xs text-slate-600">{r.runId}</div>
+              <StatusBadge status={r.status} />
+            </div>
+            <div className="font-medium text-sm mb-1">{r.deviceId}</div>
+            <div className="flex items-center justify-between text-sm">
+              <div className="flex items-center gap-3">
+                <CiBadge ci={r.ciAvg} />
+                <span className="text-slate-500">{r.tests} tests</span>
+              </div>
+              <button className="px-3 py-1.5 rounded-lg text-sm bg-slate-100 hover:bg-slate-200" onClick={() => onSelectRun(r)}>Open</button>
+            </div>
+            <div className="text-xs text-slate-500 mt-2">{r.startedAt}</div>
+          </div>
+        ))}
+      </div>
+      
+      {/* Desktop Table Layout */}
+      <div className="mt-4 overflow-auto rounded-xl border border-slate-100 hidden sm:block">
         <table className="w-full text-sm">
           <thead className="bg-slate-50 text-slate-500">
             <tr>
@@ -225,26 +318,26 @@ function ReviewsQueue({ onOpen }: { onOpen: (r: Run) => void }) {
 
   return (
     <Card>
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <h3 className="font-semibold">Pending Human Reviews</h3>
-        <div className="text-sm text-slate-500">
-          {queue.length} in queue · Policy: CI in [{policy.reviewLower.toFixed(2)}, {policy.autoPass.toFixed(2)}) + {policy.samplePct}% sampling
+        <div className="text-xs sm:text-sm text-slate-500">
+          {queue.length} in queue<span className="hidden sm:inline"> · Policy: CI in [{policy.reviewLower.toFixed(2)}, {policy.autoPass.toFixed(2)}) + {policy.samplePct}% sampling</span>
         </div>
       </div>
       <div className="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-3">
         {queue.map((r) => (
           <div key={r.runId} className="p-3 rounded-xl border border-slate-200 bg-white">
             <div className="flex items-center justify-between">
-              <div className="font-medium">{r.deviceId}</div>
+              <div className="font-medium text-sm">{r.deviceId}</div>
               <CiBadge ci={r.ciAvg} />
             </div>
             <div className="mt-1 font-mono text-xs text-slate-500">{r.runId}</div>
-            <div className="mt-2 flex items-center gap-2 text-xs text-slate-600">
+            <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-slate-600">
               <span>Flags:</span>
               <Flag label="duplex-contrast" />
               <Flag label="tls-check" />
             </div>
-            <div className="mt-3 flex items-center gap-2">
+            <div className="mt-3 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
               <button className="px-3 py-1.5 rounded-lg text-sm bg-slate-100 hover:bg-slate-200" onClick={() => onOpen(r)}>Open</button>
               <button className="px-3 py-1.5 rounded-lg text-sm bg-emerald-600 text-white hover:bg-emerald-700">Approve</button>
               <button className="px-3 py-1.5 rounded-lg text-sm bg-rose-600 text-white hover:bg-rose-700">Reject</button>
@@ -260,7 +353,35 @@ function Devices() {
   return (
     <Card>
       <h3 className="font-semibold">Devices</h3>
-      <div className="mt-3 overflow-auto rounded-xl border border-slate-100">
+      
+      {/* Mobile Card Layout */}
+      <div className="mt-4 space-y-3 sm:hidden">
+        {MOCK_DEVICES.map((d) => (
+          <div key={d.id} className="p-3 rounded-xl border border-slate-200 bg-white">
+            <div className="flex items-center justify-between mb-2">
+              <div className="font-medium text-sm">{d.model}</div>
+              <StatusBadge status={d.status} />
+            </div>
+            <div className="space-y-1 text-sm">
+              <div className="flex justify-between">
+                <span className="text-slate-500">Firmware:</span>
+                <span className="font-mono text-xs">{d.firmware}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Lab:</span>
+                <span>{d.lab}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Last Seen:</span>
+                <span>{d.lastSeen}</span>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+      
+      {/* Desktop Table Layout */}
+      <div className="mt-3 overflow-auto rounded-xl border border-slate-100 hidden sm:block">
         <table className="w-full text-sm">
           <thead className="bg-slate-50 text-slate-500">
             <tr>
@@ -292,10 +413,10 @@ function TestsCatalog() {
   return (
     <Card>
       <h3 className="font-semibold">Test Catalog</h3>
-      <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-3">
+      <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
         {TEST_GROUPS.map((g) => (
           <div key={g.id} className="p-3 rounded-xl border border-slate-200 bg-white">
-            <div className="font-semibold">{g.title}</div>
+            <div className="font-semibold text-sm">{g.title}</div>
             <div className="text-xs text-slate-500">{g.count} tests</div>
           </div>
         ))}
@@ -348,11 +469,11 @@ function AnalyticsFull() {
             </div>
             <div>
               <div className="flex items-center justify-between text-sm"><span>Warn</span><span className="text-slate-500">{ANALYTICS.byStatus.WARN}</span></div>
-              <div className="h-2 bg-slate-100 rounded-full mt-1 overflow_hidden"><div className="h-2 bg-amber-500" style={{ width: `${pct(ANALYTICS.byStatus.WARN)}%` }} /></div>
+              <div className="h-2 bg-slate-100 rounded-full mt-1 overflow-hidden"><div className="h-2 bg-amber-500" style={{ width: `${pct(ANALYTICS.byStatus.WARN)}%` }} /></div>
             </div>
             <div>
-              <div className="flex items-center justify_between text-sm"><span>Failed</span><span className="text-slate-500">{ANALYTICS.byStatus.FAILED}</span></div>
-              <div className="h-2 bg-slate-100 rounded-full mt-1 overflow_hidden"><div className="h-2 bg-rose-500" style={{ width: `${pct(ANALYTICS.byStatus.FAILED)}%` }} /></div>
+              <div className="flex items-center justify-between text-sm"><span>Failed</span><span className="text-slate-500">{ANALYTICS.byStatus.FAILED}</span></div>
+              <div className="h-2 bg-slate-100 rounded-full mt-1 overflow-hidden"><div className="h-2 bg-rose-500" style={{ width: `${pct(ANALYTICS.byStatus.FAILED)}%` }} /></div>
             </div>
           </div>
         </Card>
@@ -405,7 +526,7 @@ function RunDrawer({ run, tab, onTab, onClose, onApprove, onReject, onRerun }:
   return (
     <div className="fixed inset-0 z-40 flex">
       <div className="flex-1" onClick={onClose} />
-      <div className="w-full sm:w-[560px] h-full bg-white border-l border-slate-200 shadow-2xl p-4 overflow-y-auto">
+      <div className="w-full sm:w-[560px] h-full bg-white border-l border-slate-200 shadow-2xl p-4 sm:p-6 overflow-y-auto">
         <div className="flex items-start justify-between gap-3">
           <div>
             <div className="font-semibold">Run {run.runId}</div>
